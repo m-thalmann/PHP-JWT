@@ -91,7 +91,7 @@
          * @throws BeforeValidException
          * @throws ExpiredException
          */
-        public function decode($token){
+        public function decode($token, $noValidate = false){
             if(!is_string($token)){
                 throw new InvalidArgumentException('Token must be string');
             }
@@ -122,8 +122,10 @@
                 throw new InvalidArgumentException('Algorithm not supported');
             }
 
-            if($this->sign($header['alg'], $_header, $_payload) != $signature){
-                throw new SignatureInvalidException('Signature is not valid');
+            if($noValidate === true){
+                if($this->sign($header['alg'], $_header, $_payload) != $signature){
+                    throw new SignatureInvalidException('Signature is not valid');
+                }
             }
 
             $now = time();
