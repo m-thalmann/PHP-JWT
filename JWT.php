@@ -122,7 +122,7 @@
                 throw new InvalidArgumentException('Algorithm not supported');
             }
 
-            if($noValidate === true){
+            if($noValidate !== true){
                 if($this->sign($header['alg'], $_header, $_payload) != $signature){
                     throw new SignatureInvalidException('Signature is not valid');
                 }
