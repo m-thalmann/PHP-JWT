@@ -6,7 +6,7 @@
      * 
      * @author Matthias Thalmann {https://github.com/m-thalmann}
      * @license MIT
-     * @version 1.0
+     * @version 2.0
      */
     class JWT{
         /**
@@ -19,23 +19,16 @@
         ];
 
         /**
-         * @var string $secret The secret for this instance
+         * Should not be instanciable
          */
-        private $secret = null;
-
-        /**
-         * Creates the instance and sets the secret
-         * 
-         * @param string $secret
-         */
-        public function __construct($secret){
-            $this->setSecret($secret);
+        private function __construct(){
         }
 
         /**
          * Encodes the JWT-payload (body), signs it with the algorithm specified (default HS256)
          * and returns it
          * 
+         * @param string $secret The secret for generating the signature
          * @param array $payload The body of the JWT-Token
          * @param string $alg The algorithm to sign the token
          * 
@@ -43,7 +36,7 @@
          * 
          * @throws InvalidArgumentException
          */
-        public function encode($payload, $alg = 'HS256'){
+        public static function encode($secret, $payload, $alg = 'HS256'){
             if(!is_array($payload)){
                 throw new InvalidArgumentException('Payload has wrong format');
             }
@@ -73,7 +66,7 @@
 
             $payload = JWT::safeBase64Encode($payload);
 
-            $signature = $this->sign($alg, $header, $payload);
+            $signature = self::sign($secret, $alg, $header, $payload);
 
             return $header . '.' . $payload . '.' . $signature;
         }
@@ -81,7 +74,9 @@
         /**
          * Decodes the JWT-token and returns the payload (body)
          * 
+         * @param string $secret The secret for generating the signature
          * @param string $token The JWT-Token
+         * @param boolean $noValidate Sets whether the signature should be validated
          * 
          * @return array The payload (body)
          * 
@@ -91,7 +86,7 @@
          * @throws BeforeValidException
          * @throws ExpiredException
          */
-        public function decode($token, $noValidate = false){
+        public static function decode($secret, $token, $noValidate = false){
             if(!is_string($token)){
                 throw new InvalidArgumentException('Token must be string');
             }
@@ -123,7 +118,7 @@
             }
 
             if($noValidate !== true){
-                if($this->sign($header['alg'], $_header, $_payload) != $signature){
+                if(self::sign($secret, $header['alg'], $_header, $_payload) != $signature){
                     throw new SignatureInvalidException('Signature is not valid');
                 }
             }
@@ -156,29 +151,22 @@
         /**
          * Generates the signature
          * 
+         * @param string $secret The secret for generating the signature
          * @param string $alg The algorithm for the signature
          * @param string $header The base64urlEncoded header
          * @param string $payload The base64urlEncoded payload (body)
          * 
          * @return string The signature
          */
-        private function sign($alg, $header, $payload){
-            $signature = hash_hmac(JWT::$algorithms[$alg], $header . '.' . $payload, $this->secret, true);
+        private static function sign($secret, $alg, $header, $payload){
+            $signature = hash_hmac(JWT::$algorithms[$alg], $header . '.' . $payload, $secret, true);
             return JWT::safeBase64Encode($signature);
         }
-
-        public function setSecret($secret){
-            if(!is_string($secret)){
-                throw new InvalidArgumentException('Secret must be string');
-            }
-
-            $this->secret = $secret;
-        }
-
-        public function getSecret(){
-            return $this->secret;
-        }
     }
+
+    /*
+     * Exception classes for catching different errors
+     */
 
     class JWTException extends RuntimeException{ }
     class MalformedException extends JWTException{ }
