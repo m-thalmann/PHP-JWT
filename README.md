@@ -5,15 +5,15 @@ This class implements a simple way to en-/decode JWT-Tokens
 ```php
 require_once '/path/to/JWT.php';
 
-$jwt = new JWT('secret');
+$secret = '...'; // contains your secret
 
-$token = $jwt->encode([
+$token = JWT::encode($secret, [
   "name" => "Max Mustermann",
   "nbf" => time() + 120       // Valid in 2 minutes
 ]);
 
 try{
-  $payload = $jwt->decode($token);
+  $payload = JWT::decode($secret, $token);
   
   print_r($payload);
 }catch(Exception $e){
